@@ -25,11 +25,18 @@ const createNode = (scene, x, y) => {
     const material = new THREE.MeshPhongMaterial({ color: 0x0000ff });
     const cube = new THREE.Mesh(g, material);
 
-    cube.position.x = x * S + 1;
-    cube.position.z = y * S + 1;
+    cube.position.x = x * S;
+    cube.position.z = y * S;
 
     scene.add(cube);
+
+    const pointLight = new THREE.PointLight(0x000058, 1, 100);
+    pointLight.position.set(x*S, 5, y*S);
+    scene.add(pointLight);
+
+
 }
+
 
 
 const createBeer = (x, y) => {
@@ -37,8 +44,8 @@ const createBeer = (x, y) => {
     const material = new THREE.MeshPhongMaterial({ color: 0xff3333 });
     const cube = new THREE.Mesh(g, material);
 
-    cube.position.x = x * S + 1;
-    cube.position.z = y * S + 1;
+    cube.position.x = x * S;
+    cube.position.z = y * S;
 
     cube.scale.set(0.3, 0.8, 0.3);
 
@@ -48,6 +55,7 @@ const createBeer = (x, y) => {
         obj: cube,
         lifetime: Math.random()*503
     });
+
 
     return cube;
 }
@@ -176,14 +184,28 @@ const main = () => {
     floor.rotation.x = -PI/2;
     scene.add(floor);
 
+    // const fgeometry = new THREE.PlaneGeometry(100, 100, 100, 100);
 
+    // Modify the vertices to create a terrain effect
+    // const noise = new Perlin();
+    // for (let i = 0; i < fgeometry.vertices.length; i++) {
+    //     const vertex = fgeometry.vertices[i];
+    //     vertex.z = noise.simplex2(vertex.x / 20, vertex.y / 20) * 10;
+    // }
+
+    // fgeometry.computeVertexNormals(); // Recalculate normals for shading
+
+    // // Create a material and mesh
+    // const fmaterial = new THREE.MeshLambertMaterial({ color: 0x88cc88, wireframe: false });
+    // const fterrain = new THREE.Mesh(fgeometry, fmaterial);
+    // scene.add(terrain);
 
     // Light
     const pointLight = new THREE.PointLight(0xffffff, 1, 100);
     pointLight.position.set(5, 5, 5);
-    scene.add(pointLight);
+    // scene.add(pointLight);
 
-    const ambientLight = new THREE.AmbientLight(0x404040);
+    const ambientLight = new THREE.AmbientLight(0x888888);
     scene.add(ambientLight);
 
     camera.position.z = 5;
@@ -286,7 +308,7 @@ const main = () => {
 
         controls.target = robotObj.position;
 
-        robotObj.rotation.y = robot.a;
+        robotObj.rotation.y = -robot.a;
         robotObj.position.y = 1;
 
 
