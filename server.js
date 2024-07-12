@@ -14,12 +14,13 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public'))
 })
 
-let ROTATIONS = {
+const ROTATIONS = {
     north: 0,
     east: 1,
     south: 2,
     west: 3,
 }
+const OPPOSITES = {north: 'south', south: 'north', east: 'west', west: 'east'}
 
 let layout = JSON.parse(fs.readFileSync('layout.json', 'utf8'))
 let orderList = JSON.parse(fs.readFileSync('order.json', 'utf8'))
@@ -80,14 +81,10 @@ const sendRobotAction = (action, value) => {
 app.get('/command', (req, res) => {
 
     if (req.query.obstruction) {
-        let rotate = (ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]) % 4
-        robotState.direction = todo.direction
-        
-        let plan = schedule(layout, orderList);
-        console.log('new plan', plan)
-        
-        sendRobotAction("rotate", rotate)
-        return reply({command: "rotate", value: rotate})
+        // Move back to previous node and schedule and block and a replan
+        console.log('obstruction')
+        let reverseDirection = OPPOSITES[robotState.direction]
+        plan = [{command: 'move', direction: reverseDirection}, {command: 'obstruct', direction: robotState.direction}]
     }
 
     function reply(obj) {
@@ -100,21 +97,32 @@ app.get('/command', (req, res) => {
         sendStatusEvent("done", {})
         return reply({command: "sleep", value: 10, done: true, audio: "done"})
     }
+
+    if (todo.command == 'obstruct') {
+        plan = schedule(layout, orderList);
+        plan.unshift(
+        console.log('new plan', plan)
+        
+        sendRobotAction("rotate", rotate)
+        return reply({command: "rotate", value: rotate})
+    }
+    
     if (todo.command == "move") {
         if (todo.direction != robotState.direction) {
             // Don't shift the plan! We'll need to look at this again on the next /command request.
             let rotate = (ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]) % 4
-            robotState.direction = todo.direction
             sendRobotAction("rotate", rotate)
+            robotState.direction = todo.direction
             return reply({command: "rotate", value: rotate})
         }
         plan.shift();
         let sample = Math.floor(Math.random() * 6)
         let audio = sample < 3 ? "move"+sample : undefined
         let oldPoint = robotState.point
-        let newPoint = robotState.point = layout.points[oldPoint][todo.direction]
+        let newPoint = layout.points[oldPoint][todo.direction]
         assert(newPoint)
         sendRobotAction("move", Math.abs(layout.points[oldPoint].x-layout.points[newPoint].x) + Math.abs(layout.points[oldPoint].y-layout.points[newPoint].y))
+        robotState.point = newPoint
         return reply({command: "move", audio: audio})
     }
 
