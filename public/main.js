@@ -27,6 +27,8 @@ const createNode = (scene, x, y) => {
 
     cube.position.x = x * S;
     cube.position.z = y * S;
+    cube.position.y += 0.25;
+    cube.scale.set(1, 0.5, 1);
 
     scene.add(cube);
 
@@ -182,7 +184,21 @@ const main = () => {
     const floor = new THREE.Mesh(floor_g, fmaterial);
     floor.scale.set(1000, 1000, 1000);
     floor.rotation.x = -PI/2;
-    scene.add(floor);
+    // scene.add(floor);
+
+    // Sky
+    const skyboyG = new THREE.SphereGeometry(500, 60, 40);
+    skyboyG.scale(-1, 1, 1);
+
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load('../skybox.jpg')
+
+    const skyMaterial = new THREE.MeshBasicMaterial({map: texture});
+
+    const skybox = new THREE.Mesh(skyboyG, skyMaterial)
+
+    scene.add(skybox);
+
 
     // const fgeometry = new THREE.PlaneGeometry(100, 100, 100, 100);
 
