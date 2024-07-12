@@ -17,6 +17,7 @@ Server on `/status`.
     - x
     - y
     - count
+- done
 
 
 ## Commands the robot

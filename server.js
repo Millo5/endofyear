@@ -32,39 +32,64 @@ let robotState = {
     direction: layout["start-direction"]
 }
 
+let statusConnections = new Set()
+
 app.get('/status', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+
+    statusConnections.add(res)
+
+    res.write(`event: layout\n`);
+    res.write(`data: ${JSON.stringify(layout)}\n\n`);
+
+    req.on('close', () => {
+        statusConnections.remove(res)
+        res.end()
+    });
 })
 
+const sendStatusEvent = (name, data) => {
+    statusConnections.forEach(res => {
+        res.write(`event: ${name}\n`);
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+    })
+};
+
+
+
 app.get('/command', (req, res) => {
+
+    function reply(obj) {
+        console.log("command reply", obj)
+        return res.json(obj)
+    }
+
     let todo = plan[0]
     if (!todo) {
-        return res.json({command: "sleep", value: 10, done: true, audio: "done"})
+        return reply({command: "sleep", value: 10, done: true, audio: "done"})
     }
     if (todo.command == "move") {
         if (todo.direction != robotState.direction) {
             // Don't shift the plan! We'll need to look at this again on the next /command request.
             let rotate = (ROTATIONS[todo.direction] - ROTATIONS[robotState.direction] + 4) % 4
-            return res.json({command: "rotate", value: rotate==1 ? "right" : "left"})
+            return reply({command: "rotate", value: rotate==1 ? "right" : "left"})
         }
         plan.shift();
         let sample = Math.floor(Math.random() * 6);
         let audio = sample < 3 ? "move"+sample : undefined;
-        return res.json({command: "move", audio: audio})
+        return reply({command: "move", audio: audio})
     }
 
     if (todo.command == "deliver" || todo.command == "pickUp") {
         plan.shift();
-        res.json({command: "sleep", value: 1, audio: todo.command+todo.count})
+        reply({command: "sleep", value: 1, audio: todo.command+todo.count})
     }
 
     plan.shift();
-    return res.json({"command": "sleep", "error": "Invalid plan"})
+    return reply({"command": "sleep", "error": "Invalid plan"})
 })
-
-// - {"command": "rotate", "value: "right", "audio": "file1.mp3"}
-// - {"command": "move"} // til the next point
-// - {"command": "sleep", "value": timeInSeconds}
-
 
 
 app.listen(PORT, '0.0.0.0', () => {
