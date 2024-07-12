@@ -1,10 +1,74 @@
 // import * as THREE from 'three'
 
+// Reference
+var LAYOUT = {
+    "pickup-point": "a",
+    "start-direction": "east",
+    "points": {
+        "a": {
+            "x": 1,
+            "y": 1,
+            "east": "b",
+            "south": "d"
+        },
+        "b": {
+            "x": 2,
+            "y": 1,
+            "south": "c",
+            "west": "a"
+        },
+        "c": {
+            "x": 2,
+            "y": 3,
+            "west": "d",
+            "north": "b",
+            "east": "e"
+        },
+        "d": {
+            "x": 1,
+            "y": 3,
+            "north": "a",
+            "east": "c"
+        },
+        "e": {
+            "x": 4,
+            "y": 3,
+            "west": "c"
+        }
+    }
+}
+
+
+
+const S = 8;
 const PI = 3.14159265;
 
-const createFloor = () => {
+const createNode = (scene, x, y) => {
+    const g = new THREE.CylinderGeometry()
+    const material = new THREE.MeshPhongMaterial({ color: 0x0000ff });
+    const cube = new THREE.Mesh(g, material);
 
+    cube.position.x = x * S;
+    cube.position.z = y * S;
+
+    scene.add(cube);
 }
+
+
+const RESET = () => {
+    robot.x = 0;
+    robot.y = 0;
+    robot.count = 0;
+}
+
+
+var robot = {
+    x: 0,
+    y: 0,
+    count: 0
+}
+
+RESET();
 
 const main = () => {
     // Set up the scene, camera, and renderer
@@ -24,9 +88,15 @@ const main = () => {
     // Add the floor
     const floor_g = new THREE.PlaneGeometry();
     const floor = new THREE.Mesh(floor_g, material);
-    floor.scale.set(10, 10, 10);
+    floor.scale.set(100, 100, 100);
     floor.rotation.x = -PI/2;
     scene.add(floor);
+
+
+    createNode(scene, 0, 0);
+    createNode(scene, 0, 1);
+    createNode(scene, 1, 0);
+
 
     // Light
     const pointLight = new THREE.PointLight(0xffffff, 1, 100);
@@ -60,3 +130,13 @@ const main = () => {
 }
 
 window.onload = main;
+
+
+
+
+
+// init: 
+/*
+
+
+*/
