@@ -1,24 +1,7 @@
 import socket
 import time
 import json
-
 import cyberpi
-
-BLINK_SPEED = 0.5
-WIFI_SSID = "SD42-LAB"
-WIFI_PASS = "U$bd5s79"
-WEB_SERVER_IP = "145.76.59.22"
-WEB_SERVER_PORT = 3001
-LINE_THRESHOLD = 50
-SPEED = 20
-
-# GLOBAL VARIABLES
-distance = 300
-l1 = 0
-l2 = 0
-r1 = 0
-r2 = 0
-any_line = 0
 
 def print_msg(msg: str, color: str | None = None, clear: bool = True) -> None:
     if clear:
@@ -32,6 +15,54 @@ def print_msg(msg: str, color: str | None = None, clear: bool = True) -> None:
     else:
         cyberpi.display.set_brush(255, 255, 255)
     cyberpi.console.println(msg)
+
+
+def hex_to_rgb(hex_color):
+    hex_color = str(hex_color)
+    if hex_color[0] == '#':
+        hex_color = hex_color[1:]
+    if hex_color[0:2] == '0x':
+        hex_color = hex_color[2:]
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+
+def color_distance(c1, c2):
+    return sum((a-b)**2 for a, b in zip(hex_to_rgb(c1), hex_to_rgb(c2)))
+
+
+def closest_color(constants, target):
+    return min(constants, key=lambda x: color_distance(x, target))
+
+# Example usage
+constant_colors = {
+    '0xFF0000': 'white',
+    '0x00FF00': 'orange',
+    '0x0000FF': 'black',
+}
+
+
+def get_color_type(color):
+    x = constant_colors[closest_color(constant_colors.keys(), color)]
+    # print_msg(x)
+    return x
+
+
+BLINK_SPEED = 0.5
+WIFI_SSID = "De Vluchte"
+WIFI_PASS = "inloopkoelkast"
+WEB_SERVER_IP = "192.168.0.155"
+WEB_SERVER_PORT = 3001
+LINE_THRESHOLD = 50
+SPEED = 20
+
+# GLOBAL VARIABLES
+distance = 300
+l1 = 0
+l2 = 0
+r1 = 0
+r2 = 0
+any_line = 0
+
 
 
 def print_error(msg: object) -> None:
@@ -100,50 +131,87 @@ def parse_command(body: str) -> dict:
     return json.loads(body)
 
 
-def get_all_values(black_line=True):
-    global distance, l1, l2, r1, r2, any_line
+def get_line_bits(line_is_white, threshold = 50):
+    global distance
     distance = cyberpi.ultrasonic2.get(index=1)
-    l2 = cyberpi.quad_rgb_sensor.get_gray('l2', index=1)
-    l1 = cyberpi.quad_rgb_sensor.get_gray('l1', index=1)
-    r1 = cyberpi.quad_rgb_sensor.get_gray('r1', index=1)
-    r2 = cyberpi.quad_rgb_sensor.get_gray('r2', index=1)
-    if black_line:
-        any_line = (l2 < LINE_THRESHOLD) or (l1 < LINE_THRESHOLD) or (r1 < LINE_THRESHOLD) or (r2 < LINE_THRESHOLD)
-    else:
-        any_line = (l2 > LINE_THRESHOLD) or (l1 > LINE_THRESHOLD) or (r1 > LINE_THRESHOLD) or (r2 > LINE_THRESHOLD)
+    val = 0
+    if get_color_type(cyberpi.quad_rgb_sensor.get_color("L2")) != "black":
+        val += 8
+    if get_color_type(cyberpi.quad_rgb_sensor.get_color("L1")) != "black":
+        val += 4
+    if get_color_type(cyberpi.quad_rgb_sensor.get_color("R1")) != "black":
+        val += 2
+    if get_color_type(cyberpi.quad_rgb_sensor.get_color("R2")) != "black":
+        val += 1
+    return val
 
+
+WHITE = "FFFFFF"
+YELLOW = "ffe888"
+FLOOR = "312626"
 
 def follow_line():
+    i = 0
     while True:
-        get_all_values(black_line=True)
-        if (l1 < LINE_THRESHOLD) and (r1 < LINE_THRESHOLD):
-            # Both sensors on line, go straight
-            cyberpi.mbot2.drive_power(SPEED, -SPEED)
-        elif l1 < LINE_THRESHOLD:
-            # Left sensor on line, turn left
-            cyberpi.mbot2.drive_power(-SPEED, -SPEED)
-        elif r1 < LINE_THRESHOLD:
-            # Right sensor on line, turn right
-            cyberpi.mbot2.drive_power(SPEED, SPEED)
-        else:
-            # No sensor on line, stop
-            cyberpi.mbot2.drive_power(0, 0)
-        # Check for blue color to stop
-        color = cyberpi.quad_rgb_sensor.get_color('bottom')
-        if color == 'blue':
-            cyberpi.mbot2.stop()
+        color = cyberpi.quad_rgb_sensor.get_color('l1')
+        print(type(color))
+        time.sleep(1)
+        
+        left_speed_multiplier = 1
+        right_speed_multiplier = 1
+        
+        # Check where the line is sensed, configured for following a white line with a black background
+        detected_line_bit_mask = get_line_bits(True, 50)
+        
+        # Turn left when we detect the line on the left
+        # When we detect white only the left side
+        if detected_line_bit_mask == 0b1000 or detected_line_bit_mask == 0b0100:
+            left_speed_multiplier = 0
+        elif detected_line_bit_mask == 0b1100:
+            left_speed_multiplier = -1
+           
+        # Turn right when we detect the line on the right
+        if detected_line_bit_mask == 0b0001 or detected_line_bit_mask == 0b0010:
+            right_speed_multiplier = 0
+        elif detected_line_bit_mask == 0b0011:
+            right_speed_multiplier = -1
+            
+        # If we don't detect the line go back by half the speed
+        if detected_line_bit_mask == 0:
+            left_speed_multiplier = -0.5
+            right_speed_multiplier = -0.5
+
+        # If no special line cases are hit, we just keep moving forward
+        # as the line is where we expect it to be (one or both of the center sensors)
+            
+        # The right wheel motor has to spin in te reverse direction to moe forward
+        cyberpi.mbot2.drive_power(SPEED * left_speed_multiplier, -SPEED * right_speed_multiplier)
+
+        # Check for purple color to stop
+        color = get_color_type(cyberpi.quad_rgb_sensor.get_color('l1')
+)
+        if color == 'orange' and i >= 20:
+            cyberpi.mbot2.EM_stop()
             break
-        time.sleep(0.1)
+        
+        if detected_line_bit_mask == 0 and i >= 20:
+            cyberpi.mbot2.drive_power(SPEED, -SPEED)
+
+        # Keep going back for a second when we lost the line.
+        elif detected_line_bit_mask == 0:
+            time.sleep(1)
+
+        i += 1
 
 
 def execute_command(command_dict: dict) -> None:
     command = command_dict.get("command", "").upper()
-    print_msg(command)
+   # print_msg(command)
     
     if command == "MOVE":
         follow_line()
     elif command == "ROTATE":
-        value = command_dict.get("value", "").upper()
+        value = command_dict.get("value", 0)
         cyberpi.mbot2.turn(value)
     elif command == "SLEEP":
         value = command_dict.get("value", 0)
@@ -167,7 +235,7 @@ try:
             execute_command(command)
         except Exception as e:
             print_error(e)
-        time.sleep(3)
+        time.sleep(1)
 
 except Exception as e:
     print_error(e)
