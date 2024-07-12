@@ -1,23 +1,3 @@
-const fs = require('fs');
-
-// Parse JSON files
-function parseJsonFiles(layoutFile, orderFile) {
-    try {
-        const layout = JSON.parse(fs.readFileSync(layoutFile, 'utf8'));
-        const orders = JSON.parse(fs.readFileSync(orderFile, 'utf8'));
-        return [layout, orders];
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            console.error(`File not found: ${error.path}`);
-        } else if (error instanceof SyntaxError) {
-            console.error(`Error parsing JSON: ${error.message}`);
-        } else {
-            console.error(`Error reading files: ${error.message}`);
-        }
-        return [null, null];
-    }
-}
-
 // BFS for shortest path
 function bfsShortestPath(layout, start, goal) {
     const graph = layout.points;
@@ -64,7 +44,7 @@ function calculateCommands(path, layout) {
 }
 
 // Delivery robot algorithm
-function deliveryRobot(layout, orders) {
+function schedule(layout, orders) {
     const pickupPoint = layout["pickup-point"];
     let currentPosition = pickupPoint;
     const drinkCapacity = 5;
@@ -105,15 +85,7 @@ function deliveryRobot(layout, orders) {
         orders = remainingOrders;
     }
 
-    console.log("All orders have been delivered.");
     return plan;
 }
 
-// Example usage
-const layoutFile = 'layout.json';
-const orderFile = 'order.json';
-const [layout, orders] = parseJsonFiles(layoutFile, orderFile);
-if (layout && orders) {
-    const plan = deliveryRobot(layout, orders);
-    console.log(plan);
-}
+module.exports = { schedule };

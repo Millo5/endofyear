@@ -2,6 +2,7 @@ const os = require('os');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { schedule } = require('./alg');
 
 const app = express();
 const PORT = 3001;
@@ -21,12 +22,7 @@ let ROTATIONS = {
 
 let layout = JSON.parse(fs.readFileSync('layout.json', 'utf8'))
 let order = JSON.parse(fs.readFileSync('order.json', 'utf8'))
-let plan = [
-    {"command": "move", "direction": "north"},
-    {"command": "deliver", "count": 2},
-    {"command": "move", "direction": "south"},
-    {"command": "pickUp", "count": 3}
-]
+let plan = schedule(layout, order);
 let robotState = {
     point: layout["pickup-point"],
     direction: layout["start-direction"]
