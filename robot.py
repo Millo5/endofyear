@@ -9,7 +9,16 @@ WIFI_SSID = "SD42-LAB"
 WIFI_PASS = "wachtwoord"
 WEB_SERVER_IP = "google.com"
 WEB_SERVER_PORT = 80
+LINE_THRESHOLD = 50
+SPEED = 20
 
+# GLOBAL VARIABLES
+distance = 300
+l1 = 0
+l2 = 0
+r1 = 0
+r2 = 0
+any_line = 0
 
 def print_msg(msg: str, color: str | None = None, clear: bool = True) -> None:
     if clear:
@@ -91,25 +100,53 @@ def parse_command(body: str) -> dict:
     return json.loads(body)
 
 
+def get_all_values(black_line=True):
+    global distance, l1, l2, r1, r2, any_line
+    distance = cyberpi.ultrasonic2.get(index=1)
+    l2 = cyberpi.quad_rgb_sensor.get_gray('l2', index=1)
+    l1 = cyberpi.quad_rgb_sensor.get_gray('l1', index=1)
+    r1 = cyberpi.quad_rgb_sensor.get_gray('r1', index=1)
+    r2 = cyberpi.quad_rgb_sensor.get_gray('r2', index=1)
+    if black_line:
+        any_line = (l2 < LINE_THRESHOLD) or (l1 < LINE_THRESHOLD) or (r1 < LINE_THRESHOLD) or (r2 < LINE_THRESHOLD)
+    else:
+        any_line = (l2 > LINE_THRESHOLD) or (l1 > LINE_THRESHOLD) or (r1 > LINE_THRESHOLD) or (r2 > LINE_THRESHOLD)
+
+
+def follow_line():
+    while True:
+        get_all_values(black_line=True)
+        if (l1 < LINE_THRESHOLD) and (r1 < LINE_THRESHOLD):
+            # Both sensors on line, go straight
+            cyberpi.mbot2.drive_power(SPEED, -SPEED)
+        elif l1 < LINE_THRESHOLD:
+            # Left sensor on line, turn left
+            cyberpi.mbot2.drive_power(-SPEED, -SPEED)
+        elif r1 < LINE_THRESHOLD:
+            # Right sensor on line, turn right
+            cyberpi.mbot2.drive_power(SPEED, SPEED)
+        else:
+            # No sensor on line, stop
+            cyberpi.mbot2.drive_power(0, 0)
+        # Check for blue color to stop
+        color = cyberpi.quad_rgb_sensor.get_color('bottom')
+        if color == 'blue':
+            cyberpi.mbot2.stop()
+            break
+        time.sleep(0.1)
+
 
 def execute_command(command_dict: dict) -> None:
     command = command_dict.get("command", "").upper()
     
     if command == "MOVE":
-        while True:
-            color = cyberpi.quad_rgb_sensor.get_color('bottom')
-            if color == 'white':
-                cyberpi.mbot2.drive_power(50, 50)
-            elif color == 'blue':
-                cyberpi.mbot2.drive_power(0, 0)
-                break
-            time.sleep(0.1)
+        follow_line()
     elif command == "ROTATE":
         value = command_dict.get("value", "").upper()
         if value == "LEFT":
-            cyberpi.mbot2.turn_left()
+            cyberpi.mbot2.turn(-90)
         elif value == "RIGHT":
-            cyberpi.mbot2.turn_right()
+            cyberpi.mbot2.turn(90)
     elif command == "SLEEP":
         value = command_dict.get("value", 0)
         time.sleep(int(value))
@@ -122,12 +159,11 @@ try:
     print_board_details()
     connect_wifi(WIFI_SSID, WIFI_PASS)
     while True:
-        response = http_get(WEB_SERVER_IP, WEB_SERVER_PORT, "/")
-        for header_type, header_value in response[0].items():
-            print_msg(header_type + " => " + header_value, color='blue')
-            time.sleep(1)
-        print_msg("HTTP body:\r\n" + response[1], color='green')
-        
+        if distance <= 10:
+            response = http_get(WEB_SERVER_IP, WEB_SERVER_PORT, "/command?obstruction=true")
+        else:
+            response = http_get(WEB_SERVER_IP, WEB_SERVER_PORT, "/command?obstruction=true")
+
         command = parse_command(response[1])
         execute_command(command)
         time.sleep(3)
