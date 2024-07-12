@@ -6,9 +6,9 @@ import cyberpi
 
 BLINK_SPEED = 0.5
 WIFI_SSID = "SD42-LAB"
-WIFI_PASS = "wachtwoord"
-WEB_SERVER_IP = "google.com"
-WEB_SERVER_PORT = 80
+WIFI_PASS = "U$bd5s79"
+WEB_SERVER_IP = "145.76.59.22"
+WEB_SERVER_PORT = 3001
 LINE_THRESHOLD = 50
 SPEED = 20
 
@@ -138,15 +138,13 @@ def follow_line():
 
 def execute_command(command_dict: dict) -> None:
     command = command_dict.get("command", "").upper()
+    print_msg(command)
     
     if command == "MOVE":
         follow_line()
     elif command == "ROTATE":
         value = command_dict.get("value", "").upper()
-        if value == "LEFT":
-            cyberpi.mbot2.turn(-90)
-        elif value == "RIGHT":
-            cyberpi.mbot2.turn(90)
+        cyberpi.mbot2.turn(value)
     elif command == "SLEEP":
         value = command_dict.get("value", 0)
         time.sleep(int(value))
@@ -159,13 +157,16 @@ try:
     print_board_details()
     connect_wifi(WIFI_SSID, WIFI_PASS)
     while True:
-        if distance <= 10:
-            response = http_get(WEB_SERVER_IP, WEB_SERVER_PORT, "/command?obstruction=true")
-        else:
-            response = http_get(WEB_SERVER_IP, WEB_SERVER_PORT, "/command?obstruction=true")
+        try:
+            if distance <= 10:
+                response = http_get(WEB_SERVER_IP, WEB_SERVER_PORT, "/command?obstruction=true")
+            else:
+                response = http_get(WEB_SERVER_IP, WEB_SERVER_PORT, "/command")
 
-        command = parse_command(response[1])
-        execute_command(command)
+            command = parse_command(response[1])
+            execute_command(command)
+        except Exception as e:
+            print_error(e)
         time.sleep(3)
 
 except Exception as e:
