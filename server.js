@@ -89,6 +89,7 @@ app.get('/command', (req, res) => {
 
     function reply(obj) {
         console.log("command reply", obj)
+        console.log("robot state", robotState)
         return res.json(obj)
     }
 
@@ -100,17 +101,19 @@ app.get('/command', (req, res) => {
     }
 
     if (todo.command == 'obstruct') {
+        let p1 = layout.points[robotState.point]
+        let p2 = layout.points[p1[todo.direction]]
+        delete p1[direction]
+        delete p2[OPPOSITES[direction]]
         plan = schedule(layout, orderList);
-        console.log('new plan', plan)
-        
-        sendRobotAction("rotate", rotate)
-        return reply({command: "rotate", value: rotate})
+        console.log('new plan', plan)        
+        todo = plan[0]
     }
     
     if (todo.command == "move") {
         if (todo.direction != robotState.direction) {
             // Don't shift the plan! We'll need to look at this again on the next /command request.
-            let rotate = (ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]) % 4
+            let rotate = ((ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]) % 4) * 90
             sendRobotAction("rotate", rotate)
             robotState.direction = todo.direction
             return reply({command: "rotate", value: rotate})
