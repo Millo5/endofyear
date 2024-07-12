@@ -114,7 +114,7 @@ app.get('/command', (req, res) => {
             robotState.drinks += todo.count
         }
         sendRobotAction("sleep")
-        reply({command: "sleep", value: 1, audio: todo.command+todo.count})
+        return reply({command: "sleep", value: 1, audio: todo.command+todo.count})
     }
 
     plan.shift();
