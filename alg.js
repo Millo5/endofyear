@@ -44,12 +44,15 @@ function calculateCommands(path, layout) {
 }
 
 // Delivery robot algorithm
-function schedule(layout, orders) {
+function schedule(layout, orderList) {
     const pickupPoint = layout["pickup-point"];
     let currentPosition = pickupPoint;
     const drinkCapacity = 5;
     let currentDrinks = 0;
     const plan = [];
+
+    // Convert orderList to an array of orders
+    const orders = Object.entries(orderList).map(([point, count]) => ({ point, count }));
 
     while (orders.length > 0) {
         const ordersToDeliver = [];
@@ -82,7 +85,8 @@ function schedule(layout, orders) {
 
         // Reset currentDrinks and update orders
         currentDrinks = 0;
-        orders = remainingOrders;
+        orders.length = 0;
+        orders.push(...remainingOrders);
     }
 
     return plan;
