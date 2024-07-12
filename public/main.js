@@ -8,6 +8,7 @@
 
 const SYNC = 0;
 const PREDICT = 1;
+const DONE = 3;
 
 const PI = 3.14159265;
 
@@ -98,6 +99,20 @@ function setupSSE() {
     eventSource.addEventListener("robot", (event) => {
         const data = JSON.parse(event.data);
         console.log(data);
+
+        robot.target_x = data.x;
+        robot.target_y = data.y;
+        robot.target_a = DIRECTION[data.direction].a;
+
+        robot.drinks = data.drinks;
+        robot.action = data.action;
+
+        if ("value" in data) {
+            robot.value = data.value;
+        }
+
+        robot.state = SYNC;
+
     });
     eventSource.addEventListener("delivered", (event) => {
         const data = JSON.parse(event.data);
@@ -177,16 +192,18 @@ const main = () => {
         }
 
         if (robot.state == PREDICT) {
+            robot.state = DONE;
+            return;
             if (robot.action == "move") {
-                const target_x = robot.target_x + DIRECTION[robot.value].x
-                const target_y = robot.target_y + DIRECTION[robot.value].y
+                const target_x = robot.target_x + Math.cos(robot.target_a) * robot.value;
+                const target_y = robot.target_y + Math.sin(robot.target_a) * robot.value;
                 
                 // robot.x = lerp(robot.x, target_x, 0.1);
                 // robot.y = lerp(robot.y, target_y, 0.1);
 
-                const ang = Math.atan2(target_y - robot.y, target_x, - robot.x);
-                robot.x += Math.cos(ang) * DDISPLACE;
-                robot.y += Math.sin(ang) * DDISPLACE;
+                // const ang = Math.atan2(target_y - robot.y, target_x, - robot.x);
+                robot.x += Math.cos(robot.target_a) * DDISPLACE;
+                robot.y += Math.sin(robot.target_a) * DDISPLACE;
 
                 const dist = Math.sqrt(
                     Math.pow(robot.x - target_x, 2) +
