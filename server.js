@@ -103,8 +103,8 @@ app.get('/command', (req, res) => {
     if (todo.command == 'obstruct') {
         let p1 = layout.points[robotState.point]
         let p2 = layout.points[p1[todo.direction]]
-        delete p1[direction]
-        delete p2[OPPOSITES[direction]]
+        delete p1[todo.direction]
+        delete p2[OPPOSITES[todo.direction]]
         plan = schedule(layout, orderList);
         console.log('new plan', plan)        
         todo = plan[0]
