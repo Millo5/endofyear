@@ -94,13 +94,13 @@ app.get('/command', (req, res) => {
 
     let todo = plan[0]
     if (!todo) {
+        sendRobotAction("sleep")
         sendStatusEvent("done", {})
         return reply({command: "sleep", value: 10, done: true, audio: "done"})
     }
 
     if (todo.command == 'obstruct') {
         plan = schedule(layout, orderList);
-        plan.unshift(
         console.log('new plan', plan)
         
         sendRobotAction("rotate", rotate)
