@@ -29,3 +29,16 @@ That will returns JSON such as:
 - {"command": "move"} // til the next point
 - {"command": "sleep", "value": timeInSeconds}
 
+When the robot detects an obstacle within 20cm, it stops and retrieves new instructions using `/command?obstruction=true`.
+
+
+## Interface with alg
+
+let plan = alg.schedule(layout, orders)
+
+plan = [
+- {"command": "move", "direction": "north"},
+- {"command": "deliver", "count": numberOfDrinks}
+- {"command": "move", "direction": "south"},
+- {"command": "pickUp", "count": numberOfDrinks}
+]
