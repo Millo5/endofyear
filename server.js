@@ -68,17 +68,20 @@ app.get('/command', (req, res) => {
 
     let todo = plan[0]
     if (!todo) {
+        sendStatusEvent("done", {})
         return reply({command: "sleep", value: 10, done: true, audio: "done"})
     }
     if (todo.command == "move") {
         if (todo.direction != robotState.direction) {
             // Don't shift the plan! We'll need to look at this again on the next /command request.
-            let rotate = (ROTATIONS[todo.direction] - ROTATIONS[robotState.direction] + 4) % 4
-            return reply({command: "rotate", value: rotate==1 ? "right" : "left"})
+            let rotate = (ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]) % 4
+            robotState.direction = todo.direction
+            return reply({command: "rotate", value: rotate})
         }
         plan.shift();
-        let sample = Math.floor(Math.random() * 6);
-        let audio = sample < 3 ? "move"+sample : undefined;
+        let sample = Math.floor(Math.random() * 6)
+        let audio = sample < 3 ? "move"+sample : undefined
+        robotState.point = layout.points[robotState.point][todo.direction]
         return reply({command: "move", audio: audio})
     }
 

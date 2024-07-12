@@ -11,7 +11,7 @@ Server on `/status`.
 
     - action: rotate/move/sleep
     - value:
-        'left'/'right' (for rotate)
+        -90/90/180 (for rotate)
         distance (for move)
 - delivered
     - x
@@ -26,7 +26,7 @@ Whenever the robot is doing nothing it will send an HTTP request to the server `
 
 That will returns JSON such as:
 
-- {"command": "rotate", "value: "right", "audio": "file1.mp3"}
+- {"command": "rotate", "value: -90/90/180, "audio": "file1.mp3"}
 - {"command": "move"} // til the next point
 - {"command": "sleep", "value": timeInSeconds}
 
