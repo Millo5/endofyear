@@ -2,42 +2,7 @@
 
 
 // Reference
-var LAYOUT = {
-    "pickup-point": "a",
-    "start-direction": "east",
-    "points": {
-        "a": {
-            "x": 1,
-            "y": 1,
-            "east": "b",
-            "south": "d"
-        },
-        "b": {
-            "x": 2,
-            "y": 1,
-            "south": "c",
-            "west": "a"
-        },
-        "c": {
-            "x": 2,
-            "y": 3,
-            "west": "d",
-            "north": "b",
-            "east": "e"
-        },
-        "d": {
-            "x": 1,
-            "y": 3,
-            "north": "a",
-            "east": "c"
-        },
-        "e": {
-            "x": 4,
-            "y": 3,
-            "west": "c"
-        }
-    }
-}
+
 
 
 
@@ -86,6 +51,7 @@ const RESET = () => {
     robot.y = 0;
 }
 
+var layout = []
 
 var robot = {
     x: 0,
@@ -114,7 +80,19 @@ function setupSSE() {
 // layout robot delivered
     eventSource.addEventListener("layout", (event) => {
         const data = JSON.parse(event.data);
-        console.log(data);
+
+        const pickupPoint = data["pickup-point"];
+        const points = data["points"]
+        console.log(points)
+        
+        Object.keys(points).forEach(i => {
+            console.log(i);
+            console.log(points[i]);
+
+            const point = points[i]
+            createNode(scene, point.x, point.y)
+        })
+
     });
     eventSource.addEventListener("robot", (event) => {
         const data = JSON.parse(event.data);
@@ -128,12 +106,13 @@ function setupSSE() {
 
 }
 
+var scene = new THREE.Scene;
+
 const main = () => {
     setupSSE();
 
-
     // Set up the scene, camera, and renderer
-    const scene = new THREE.Scene();
+    scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') });
 
@@ -151,15 +130,10 @@ const main = () => {
     const floor_g = new THREE.PlaneGeometry();
     const fmaterial = new THREE.MeshPhongMaterial({ color: 0x44ff44 });
     const floor = new THREE.Mesh(floor_g, fmaterial);
-    floor.scale.set(100, 100, 100);
+    floor.scale.set(1000, 1000, 1000);
     floor.rotation.x = -PI/2;
     scene.add(floor);
 
-
-    createNode(scene, 0, 0);
-    createNode(scene, 0, 1);
-    createNode(scene, 1, 0);
-    createNode(scene, 0, 2);
 
 
     // Light
