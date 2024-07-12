@@ -83,12 +83,13 @@ function setupSSE() {
 
         const pickupPoint = data["pickup-point"];
         const points = data["points"]
-        console.log(points)
-        
-        Object.keys(points).forEach(i => {
-            console.log(i);
-            console.log(points[i]);
+        console.log(data)
 
+        robot.target_a = DIRECTION[data["start-direction"]].a
+        robot.state = SYNC;
+        robot.action = "sleep"
+
+        Object.keys(points).forEach(i => {
             const point = points[i]
             createNode(scene, point.x, point.y)
         })

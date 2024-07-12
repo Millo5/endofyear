@@ -51,7 +51,7 @@ app.get('/status', (req, res) => {
     sendRobotAction("sleep")
 
     req.on('close', () => {
-        statusConnections.remove(res)
+        statusConnections.delete(res)
         res.end()
     });
 })
