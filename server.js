@@ -25,7 +25,8 @@ let order = JSON.parse(fs.readFileSync('order.json', 'utf8'))
 let plan = schedule(layout, order);
 let robotState = {
     point: layout["pickup-point"],
-    direction: layout["start-direction"]
+    direction: layout["start-direction"],
+    drinks: 0,
 }
 
 let statusConnections = new Set()
@@ -51,8 +52,19 @@ const sendStatusEvent = (name, data) => {
         res.write(`event: ${name}\n`);
         res.write(`data: ${JSON.stringify(data)}\n\n`);
     })
-};
+}
 
+const sendRobotAction = (action, value) => {
+    let point = layout.points[robotState.point]
+    sendStatusEvent({
+        x: point.x,
+        y: point.y,
+        drinks: robotState.drinks,
+        direction: robotState.direction,
+        action: action,
+        value: value,
+    })
+}
 
 
 app.get('/command', (req, res) => {
@@ -72,17 +84,25 @@ app.get('/command', (req, res) => {
             // Don't shift the plan! We'll need to look at this again on the next /command request.
             let rotate = (ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]) % 4
             robotState.direction = todo.direction
+            sendRobotAction("rotate", rotate)
             return reply({command: "rotate", value: rotate})
         }
         plan.shift();
         let sample = Math.floor(Math.random() * 6)
         let audio = sample < 3 ? "move"+sample : undefined
-        robotState.point = layout.points[robotState.point][todo.direction]
+        let oldPoint = robotState.point
+        let newPoint = robotState.point = layout.points[oldPoint][todo.direction]
+        sendRobotAction("move", Math.abs(oldPoint.x-newPoint.x) + Math.abs(oldPoint.y-newPoint.y))
         return reply({command: "move", audio: audio})
     }
 
     if (todo.command == "deliver" || todo.command == "pickUp") {
         plan.shift();
+        if (todo.command == "deliver") {
+            sendStatusEvent("delivered", {})
+            robotState.drinks -= todo.count
+        }
+        sendRobotAction("sleep")
         reply({command: "sleep", value: 1, audio: todo.command+todo.count})
     }
 

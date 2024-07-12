@@ -6,7 +6,7 @@ Server on `/status`.
 - robot
     - x
     - y
-    - orientation: north/east/south/west
+    - direction: north/east/south/west
     - drinks: number
 
     - action: rotate/move/sleep
