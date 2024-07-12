@@ -21,8 +21,13 @@ let ROTATIONS = {
 }
 
 let layout = JSON.parse(fs.readFileSync('layout.json', 'utf8'))
-let order = JSON.parse(fs.readFileSync('order.json', 'utf8'))
-let plan = schedule(layout, order);
+let orderList = JSON.parse(fs.readFileSync('order.json', 'utf8'))
+let orders = {}
+for(let k of orderList) orders[k.point] = order.count
+
+let plan = schedule(layout, orderList);
+console.log('plan', plan)
+
 let robotState = {
     point: layout["pickup-point"],
     direction: layout["start-direction"],
