@@ -3,9 +3,6 @@
 
 // Reference
 
-
-
-
 const SYNC = 0;
 const PREDICT = 1;
 const DONE = 3;
@@ -17,10 +14,10 @@ const DANGLE = 0.05;
 const DDISPLACE = 0.01;
 
 const DIRECTION = {
-    "north": {x: 0, y: -1, a: 0},
-    "east": {x: 1, y: 0, a: PI/2},
-    "south": {x: 0, y: 1, a: PI},
-    "west": {x: -1, y: 0, a: PI/4 * 3},
+    "north": {x: 0, y: -1, a: PI/2 * 3},
+    "east": {x: 1, y: 0, a: 0},
+    "south": {x: 0, y: 1, a: PI/2},
+    "west": {x: -1, y: 0, a: PI},
 }
 
 const createNode = (scene, x, y) => {
@@ -43,16 +40,25 @@ const createBeer = (x, y) => {
     cube.position.x = x * S + 1;
     cube.position.z = y * S + 1;
 
+    cube.scale.set(0.3, 0.8, 0.3);
+
     scene.add(cube);
+
+    robot.beers.push({
+        obj: cube,
+        lifetime: Math.random()*503
+    });
+
     return cube;
 }
 
 const RESET = () => {
-    robot.x = 0;
+    robot.x = 0;obj: 
     robot.y = 0;
 }
 
 var layout = []
+var freeFallingBeer = [];
 
 var robot = {
     x: 0,
@@ -107,6 +113,13 @@ function setupSSE() {
         robot.drinks = data.drinks;
         robot.action = data.action;
 
+        if (robot.beers.length < data.drinks) {
+            const count = data.drinks - robot.beers.length;
+            for (let i = 0; i < count; i++) {
+                createBeer(robot.x, robot.y);
+            }
+        }
+
         if ("value" in data) {
             robot.value = data.value;
         }
@@ -117,6 +130,14 @@ function setupSSE() {
     eventSource.addEventListener("delivered", (event) => {
         const data = JSON.parse(event.data);
         console.log(data);
+        
+        for (let i = 0; i < data.count; i++) {
+            const beer = robot.beers.pop();
+            freeFallingBeer.push({
+                beer: beer,
+                vel: new THREE.Vector3(Math.cos(beer.lifetime), 1, Math.sin(beer.lifetime))
+            });
+        }
     });
 
 
@@ -170,6 +191,25 @@ const main = () => {
     function animate() {
         requestAnimationFrame(animate);
 
+        robot.beers.forEach(beer => {
+            beer.lifetime += 0.02;
+            
+            const xx = robotObj.position.x + Math.cos(beer.lifetime) * 2;
+            const yy = 2 + Math.sin(beer.lifetime * 4) * 0.4;
+            const zz = robotObj.position.z + Math.sin(beer.lifetime) * 2;
+
+            beer.obj.position.x = lerp(beer.obj.position.x, xx, 0.1);
+            beer.obj.position.y = lerp(beer.obj.position.y, yy, 0.1);
+            beer.obj.position.z = lerp(beer.obj.position.z, zz, 0.1);
+        });
+
+        freeFallingBeer.forEach(beer => {
+            beer.vel.multiplyScalar(0.9);
+            beer.vel.y -= 0.1;
+            beer.beer.obj.position.add(beer.vel);
+        })
+
+        // Handle Beers
         
         if (robot.state == SYNC) {
             robot.x = lerp(robot.x, robot.target_x, 0.1);
@@ -192,8 +232,8 @@ const main = () => {
         }
 
         if (robot.state == PREDICT) {
-            robot.state = DONE;
-            return;
+            // robot.state = DONE;
+            // return;
             if (robot.action == "move") {
                 const target_x = robot.target_x + Math.cos(robot.target_a) * robot.value;
                 const target_y = robot.target_y + Math.sin(robot.target_a) * robot.value;
