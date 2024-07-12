@@ -108,6 +108,7 @@ function setupSSE() {
 
         robot.target_x = data.x;
         robot.target_y = data.y;
+        robot.orientation = data.direction;
         robot.target_a = DIRECTION[data.direction].a;
 
         robot.drinks = data.drinks;
@@ -122,6 +123,10 @@ function setupSSE() {
 
         if ("value" in data) {
             robot.value = data.value;
+
+            if (data.action == "rotate") {
+                robot.target_a += data.value / 180 * PI;
+            }
         }
 
         robot.state = SYNC;
@@ -255,7 +260,8 @@ const main = () => {
             }
             if (robot.action == "rotate") {
                 // robot.a = lerp(robot.a, robot.target_a, 0.1);
-                robot.a += Math.sign(robot.target_a - robot.a) * DANGLE
+                // robot.a += Math.sign(robot.target_a - robot.a) * DANGLE
+                robot.a += Math.sign(robot.value) * DANGLE;
 
                 const rotOff = Math.sqrt(
                     Math.pow(robot.a - robot.target_a, 2)
