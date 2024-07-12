@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { schedule } = require('./alg');
+const assert = require('assert');
 
 const app = express();
 const PORT = 3001;
@@ -45,8 +46,9 @@ app.get('/status', (req, res) => {
 
     statusConnections.add(res)
 
-    res.write(`event: layout\n`);
-    res.write(`data: ${JSON.stringify(layout)}\n\n`);
+    res.write(`event: layout\n`)
+    res.write(`data: ${JSON.stringify(layout)}\n\n`)
+    sendRobotAction("sleep")
 
     req.on('close', () => {
         statusConnections.remove(res)
@@ -55,9 +57,10 @@ app.get('/status', (req, res) => {
 })
 
 const sendStatusEvent = (name, data) => {
+    console.log('status event', name, data)
     statusConnections.forEach(res => {
-        res.write(`event: ${name}\n`);
-        res.write(`data: ${JSON.stringify(data)}\n\n`);
+        res.write(`event: ${name}\n`)
+        res.write(`data: ${JSON.stringify(data)}\n\n`)
     })
 }
 
@@ -75,6 +78,17 @@ const sendRobotAction = (action, value) => {
 
 
 app.get('/command', (req, res) => {
+
+    if (req.query.obstruction) {
+        let rotate = (ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]) % 4
+        robotState.direction = todo.direction
+        
+        let plan = schedule(layout, orderList);
+        console.log('new plan', plan)
+        
+        sendRobotAction("rotate", rotate)
+        return reply({command: "rotate", value: rotate})
+    }
 
     function reply(obj) {
         console.log("command reply", obj)
@@ -99,7 +113,8 @@ app.get('/command', (req, res) => {
         let audio = sample < 3 ? "move"+sample : undefined
         let oldPoint = robotState.point
         let newPoint = robotState.point = layout.points[oldPoint][todo.direction]
-        sendRobotAction("move", Math.abs(oldPoint.x-newPoint.x) + Math.abs(oldPoint.y-newPoint.y))
+        assert(newPoint)
+        sendRobotAction("move", Math.abs(layout.points[oldPoint].x-layout.points[newPoint].x) + Math.abs(layout.points[oldPoint].y-layout.points[newPoint].y))
         return reply({command: "move", audio: audio})
     }
 
@@ -109,7 +124,7 @@ app.get('/command', (req, res) => {
             let point = robotState.point
             orders[point] -= todo.count
             delivered[point] = (delivered[point] || 0) + todo.count
-            sendStatusEvent("delivered", {x: point.x, y: point.y, count: delivered[point]})
+            sendStatusEvent("delivered", {x: layout.points[point].x, y: layout.points[point].y, count: delivered[point]})
             robotState.drinks -= todo.count
         } else {
             robotState.drinks += todo.count
