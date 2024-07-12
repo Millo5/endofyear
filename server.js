@@ -24,7 +24,7 @@ let layout = JSON.parse(fs.readFileSync('layout.json', 'utf8'))
 let orderList = JSON.parse(fs.readFileSync('order.json', 'utf8'))
 let orders = {}
 let delivered = {}
-for(let k of orderList) orders[k.point] = order.count
+for(let item of orderList) orders[item.point] = item.count
 
 let plan = schedule(layout, orderList);
 console.log('plan', plan)
