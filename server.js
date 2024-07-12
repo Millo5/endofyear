@@ -115,7 +115,10 @@ app.get('/command', (req, res) => {
     if (todo.command == "move") {
         if (todo.direction != robotState.direction) {
             // Don't shift the plan! We'll need to look at this again on the next /command request.
-            let rotate = ((ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]) % 4) * 90
+            let rotate = ROTATIONS[todo.direction] - ROTATIONS[robotState.direction]
+            if (rotate <= -2) rotate += 4
+            else if (rotate > 2) rotate -= 4
+            rotate *= 90
             sendRobotAction("rotate", rotate)
             robotState.direction = todo.direction
             return reply({command: "rotate", value: rotate})
