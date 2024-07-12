@@ -102,7 +102,7 @@ function setupSSE() {
         const points = data["points"]
         console.log(data)
 
-        robot.target_a = DIRECTION[data["start-direction"]].a
+        robot.target_a = -DIRECTION[data["start-direction"]].a
         robot.state = SYNC;
         robot.action = "sleep"
 
@@ -279,14 +279,14 @@ const main = () => {
             // return;
             if (robot.action == "move") {
                 const target_x = robot.target_x + Math.cos(robot.target_a) * robot.value;
-                const target_y = robot.target_y + Math.sin(robot.target_a) * robot.value;
+                const target_y = robot.target_y + Math.sin(robot.target_a) * -robot.value;
                 
                 // robot.x = lerp(robot.x, target_x, 0.1);
                 // robot.y = lerp(robot.y, target_y, 0.1);
 
                 // const ang = Math.atan2(target_y - robot.y, target_x, - robot.x);
                 robot.x += Math.cos(robot.target_a) * DDISPLACE;
-                robot.y += Math.sin(robot.target_a) * DDISPLACE;
+                robot.y += Math.sin(robot.target_a) * -DDISPLACE;
 
                 const dist = Math.sqrt(
                     Math.pow(robot.x - target_x, 2) +
