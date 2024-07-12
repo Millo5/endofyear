@@ -1,14 +1,42 @@
 [
     {
-        "point": "b",
+        "point": "k",
         "count": 3
     },
     {
-        "point": "e",
+        "point": "m",
+        "count": 2
+    },
+    {
+        "point": "p",
+        "count": 3
+    },
+    {
+        "point": "b",
+        "count": 2
+    },
+    {
+        "point": "l",
+        "count": 4
+    },
+    {
+        "point": "g",
         "count": 1
     },
     {
-        "point": "d",
+        "point": "o",
+        "count": 1
+    },
+    {
+        "point": "h",
         "count": 2
+    },
+    {
+        "point": "d",
+        "count": 1
+    },
+    {
+        "point": "c",
+        "count": 1
     }
 ]

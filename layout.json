@@ -3,34 +3,104 @@
     "start-direction": "east",
     "points": {
         "a": {
-            "x": 1,
-            "y": 1,
+            "x": 2,
+            "y": 5,
             "east": "b",
-            "south": "d"
+            "south": "k"
         },
         "b": {
-            "x": 2,
-            "y": 1,
-            "south": "c",
-            "west": "a"
+            "x": 3,
+            "y": 5,
+            "west": "a",
+            "south": "d",
+            "east": "c"
         },
         "c": {
-            "x": 2,
-            "y": 3,
-            "west": "d",
+            "x": 4,
+            "y": 5,
+            "west": "b"
+        },
+        "d": {
+            "x": 3,
+            "y": 4,
             "north": "b",
             "east": "e"
         },
-        "d": {
-            "x": 1,
-            "y": 3,
-            "north": "a",
-            "east": "c"
-        },
         "e": {
             "x": 4,
+            "y": 4,
+            "west": "d",
+            "south": "i"
+        },
+        "f": {
+            "x": 5,
+            "y": 4,
+            "south": "j",
+            "east": "g"
+        },
+        "g": {
+            "x": 6,
+            "y": 4,
+            "west": "f",
+            "south": "o"
+        },
+        "h": {
+            "x": 3,
             "y": 3,
-            "west": "c"
+            "south": "l",
+            "east": "i"
+        },
+        "i": {
+            "x": 4,
+            "y": 3,
+            "west": "h",
+            "east": "j",
+            "north": "e",
+            "south": "m"
+        },
+        "j": {
+            "x": 5,
+            "y": 3,
+            "north": "f",
+            "west": "i"
+        },
+        "k": {
+            "x": 2,
+            "y": 1,
+            "north": "a",
+            "east": "l"
+        },
+        "l": {
+            "x": 3,
+            "y": 1,
+            "north": "h",
+            "east": "m",
+            "west": "k"
+        },
+        "m": {
+            "x": 4,
+            "y": 1,
+            "north": "i",
+            "east": "n",
+            "west": "l"
+        },
+        "n": {
+            "x": 5,
+            "y": 1,
+            "north": "p",
+            "east": "o",
+            "west": "m"
+        },
+        "o": {
+            "x": 6,
+            "y": 1,
+            "west": "n",
+            "north": "g"
+        },
+        "p": {
+            "x": 5,
+            "y": 2,
+            "south": "n"
         }
     }
 }

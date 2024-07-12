@@ -51,6 +51,7 @@ function schedule(layout, orderList) {
     let currentDrinks = 0;
     const plan = [];
 
+
     // Convert orderList to an array of orders
     const orders = Object.entries(orderList).map(([point, count]) => ({ point, count }));
 
