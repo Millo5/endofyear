@@ -66,7 +66,7 @@ const sendStatusEvent = (name, data) => {
 
 const sendRobotAction = (action, value) => {
     let point = layout.points[robotState.point]
-    sendStatusEvent({
+    sendStatusEvent('robot', {
         x: point.x,
         y: point.y,
         drinks: robotState.drinks,
