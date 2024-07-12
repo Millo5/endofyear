@@ -77,12 +77,14 @@ const sendRobotAction = (action, value) => {
     })
 }
 
+let obstruct = true
 
 app.get('/command', (req, res) => {
 
-    if (req.query.obstruction) {
+    if (req.query.obstruction && !obstruct) {
         // Move back to previous node and schedule and block and a replan
         console.log('obstruction')
+        obstruct = true;
         let reverseDirection = OPPOSITES[robotState.direction]
         plan = [{command: 'move', direction: reverseDirection}, {command: 'obstruct', direction: robotState.direction}]
     }
