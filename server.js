@@ -23,6 +23,7 @@ let ROTATIONS = {
 let layout = JSON.parse(fs.readFileSync('layout.json', 'utf8'))
 let orderList = JSON.parse(fs.readFileSync('order.json', 'utf8'))
 let orders = {}
+let delivered = {}
 for(let k of orderList) orders[k.point] = order.count
 
 let plan = schedule(layout, orderList);
@@ -104,8 +105,13 @@ app.get('/command', (req, res) => {
     if (todo.command == "deliver" || todo.command == "pickUp") {
         plan.shift();
         if (todo.command == "deliver") {
-            sendStatusEvent("delivered", {})
+            let point = robotState.point
+            orders[point] -= todo.count
+            delivered[point] = (delivered[point] || 0) + todo.count
+            sendStatusEvent("delivered", {x: point.x, y: point.y, count: delivered[point]})
             robotState.drinks -= todo.count
+        } else {
+            robotState.drinks += todo.count
         }
         sendRobotAction("sleep")
         reply({command: "sleep", value: 1, audio: todo.command+todo.count})
