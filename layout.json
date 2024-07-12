@@ -1,0 +1,36 @@
+{
+    "pickup-point": "a",
+    "start-direction": "east",
+    "points": {
+        "a": {
+            "x": 1,
+            "y": 1,
+            "east": "b",
+            "south": "d"
+        },
+        "b": {
+            "x": 2,
+            "y": 1,
+            "south": "c",
+            "west": "a"
+        },
+        "c": {
+            "x": 2,
+            "y": 3,
+            "west": "d",
+            "north": "b",
+            "east": "e"
+        },
+        "d": {
+            "x": 1,
+            "y": 3,
+            "north": "a",
+            "east": "c"
+        },
+        "e": {
+            "x": 4,
+            "y": 3,
+            "west": "c"
+        }
+    }
+}
